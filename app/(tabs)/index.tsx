@@ -1,13 +1,11 @@
-import { Pressable, StyleSheet } from 'react-native'
+import { LayoutRectangle, Pressable, StyleSheet } from 'react-native'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Text, View } from '../../components/Themed'
 
 export default function TabOneScreen() {
-  const not = 'NÃO '
-  const is = ''
-
-  const [taps, setTaps] = useState<number>(1999)
+  const [taps, setTaps] = useState<number>(222)
+  const [pressableLayout, setPressableLayout] = useState<LayoutRectangle | null>(null)
 
   function extense(): string {
     const result: string[] = []
@@ -47,16 +45,16 @@ export default function TabOneScreen() {
 
     const description = !taps ? 'ZERO' : result.filter(Boolean).reverse().join(' E ')
 
-    return description.replaceAll('CEM E', 'CENTO E').replaceAll('UM MIL', 'MIL')
+    return description.replaceAll('CEM E', 'CENTO E').replaceAll('UM MIL', 'MIL').replaceAll('MIL E', 'MIL')
   }
 
   function isPrime() {
     if (!(taps % 2) || taps.toString().endsWith('5'))
-      return not
+      return false
     for (let i = 3; i <= Math.floor(taps / 2); i += 2)
       if (!(taps % i))
-        return not
-    return is
+        return false
+    return true
   }
 
   function sumAll() {
@@ -73,10 +71,9 @@ export default function TabOneScreen() {
     return description.join(' -> ')
   }
 
-  const description = [
-    !(taps % 2) ? 'PAR' : 'ÍMPAR',
-    isPrime() + 'PRIMO',
-  ].join(', ')
+  function toTime() {
+
+  }
 
   return (
     <View style={styles.container}>
@@ -87,19 +84,37 @@ export default function TabOneScreen() {
           justifyContent: 'center',
           width: '100%'
         }}
-        onPress={() => setTaps(taps + 1)}>
-        <Text style={styles.title}>
-          {taps}
-        </Text>
-        <Text style={styles.descriptionText}>
-          {extense()}
-        </Text>
-        <Text style={styles.descriptionText}>
-          {sumAll()}
-        </Text>
-        <Text style={styles.descriptionText}>
-          {description}
-        </Text>
+        onLayout={(event) => {
+          setPressableLayout(event.nativeEvent.layout)
+        }}
+        onPress={(event) => {
+          if (!pressableLayout)
+            return
+
+          const inc = event.nativeEvent.locationX < pressableLayout.width / 2 ? -1 : 1
+
+          if (event.nativeEvent.locationY > pressableLayout.height / 3 * 2)
+            setTaps(taps + 100 * inc)
+          else if (event.nativeEvent.locationY > pressableLayout.height / 3)
+            setTaps(taps + 10 * inc)
+          else
+            setTaps(taps + 1 * inc)
+
+        }}>
+        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={styles.title}>
+            {taps}
+          </Text>
+          <Text style={styles.descriptionText}>
+            {extense()}
+          </Text>
+          <Text style={styles.descriptionText}>
+            {sumAll()}
+          </Text>
+          <Text style={styles.descriptionText}>
+            {isPrime() ? 'PRIMO' : 'NÃO PRIMO'}, {!(taps % 2) ? 'PAR' : 'ÍMPAR'}
+          </Text>
+        </View>
       </Pressable>
     </View >
   );
